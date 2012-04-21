@@ -1,7 +1,6 @@
 # Capistrano::S3::Copy
 
-This is a revised implementation of the ideas of this ideas in Bill Kirtleys capistrano-s3
-gem.
+This is a revised implementation of the ideas in Bill Kirtleys capistrano-s3 gem.
 
 I have a requirement to push new deployments via capistrano, but also to retain the last
 deployed package in S3 for the purposes of auto-scaling. 
