@@ -34,13 +34,13 @@ module Capistrano
           package_path = filename
           package_name = File.basename(package_path)
           s3_package = "s3://#{bucket_name}/#{rails_env}/#{package_name}"
-          system("#{aws_environment} s3cmd put #{package_path} #{s3_package} 2>&1")
+          system("#{aws_environment} s3cmd --no-progress put #{package_path} #{s3_package} 2>&1")
           
           if $? != 0
             raise Capistrano::Error, "shell command failed with return code #{$?}"
           end          
           
-          run "#{aws_environment} s3cmd get #{bucket_name}:#{rails_env}/#{package_name} #{remote_filename}"
+          run "#{aws_environment} s3cmd get #{bucket_name}:#{rails_env}/#{package_name} #{remote_filename} 2>&1"
           run "mkdir #{configuration[:release_path]} && cd #{configuration[:release_path]} && #{decompress(remote_filename).join(" ")} && rm #{remote_filename}"
           logger.debug "done!"
         end
