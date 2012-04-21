@@ -41,7 +41,7 @@ module Capistrano
           end          
           
           run "#{aws_environment} s3cmd get #{bucket_name}:#{rails_env}/#{package_name} #{remote_filename} 2>&1"
-          run "mkdir #{configuration[:release_path]} && cd #{configuration[:release_path]} && #{decompress(remote_filename).join(" ")} && rm #{remote_filename}"
+          run "cd #{configuration[:releases_path]} && #{decompress(remote_filename).join(" ")} && rm #{remote_filename}"          
           logger.debug "done!"
         end
           
