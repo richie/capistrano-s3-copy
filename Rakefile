@@ -1,4 +1,4 @@
-#!/usr/bin/env rake
+#rake #!/usr/bin/env rake
 require 'rdoc/task'
 require "bundler/gem_tasks"
 
@@ -18,3 +18,5 @@ task :clean do
   rm_rf "pkg"
   rm_rf "doc"
 end
+
+task :default => [ :clean, :build, :doc ]
