@@ -8,7 +8,7 @@ module Capistrano
         S3CMD_VARS = ["aws_access_key_id", "aws_secret_access_key"]
       
         def initialize(config={})
-          super(config)          
+          super(config)
           
           s3cmd_vars = []
           S3CMD_VARS.each do |var|
@@ -33,11 +33,14 @@ module Capistrano
         def distribute!
           package_path = filename
           package_name = File.basename(package_path)
-          s3_package = "s3://#{bucket_name}/#{rails_env}/#{package_name}"
-          system("#{aws_environment} s3cmd --no-progress put #{package_path} #{s3_package} 2>&1")
+          s3_package = "s3://#{bucket_name}/#{rails_env}/#{package_name}"          
+          s3_push_cmd = "#{aws_environment} s3cmd --no-progress put #{package_path} #{s3_package} 2>&1"
           
-          if $? != 0
-            raise Capistrano::Error, "shell command failed with return code #{$?}"
+          if configuration.dry_run           
+            logger.debug s3_push_cmd
+          else  
+            system(s3_push_cmd)                      
+            raise Capistrano::Error, "shell command failed with return code #{$?}" if $? != 0
           end          
           
           run "#{aws_environment} s3cmd get #{bucket_name}:#{rails_env}/#{package_name} #{remote_filename} 2>&1"
