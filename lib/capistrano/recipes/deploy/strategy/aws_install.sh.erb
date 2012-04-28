@@ -1,0 +1,66 @@
+#!/bin/sh
+
+# Auto-scaling capistrano like deployment script Rails3 specific.
+
+echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"
+echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"
+
+# cap deploy:setup
+mkdir -p <%= configuration[:deploy_to] %>
+mkdir -p <%= configuration[:releases_path] %>
+mkdir -p <%= configuration[:shared_path] %>
+<% %w(system log pids).each do |sub_path| -%>
+mkdir -p <%= configuration[:shared_path] %>/<%= sub_path %>
+<% end -%>
+touch <%= configuration[:shared_path] %>/log/<%= configuration[:rails_env] %>.log
+chmod 0666 <%= configuration[:shared_path] %>/log/<%= configuration[:rails_env] %>.log
+chmod -R g+w <%= configuration[:deploy_to] %>
+
+# AFTER: cap deploy:setup
+# Project specific shared directories
+# mkdir -p <%= configuration[:shared_path] %>/content
+# mkdir -p <%= configuration[:shared_path] %>/uploads
+
+# cap deploy:update_code
+s3cmd get <%= configuration[:aws_s3_copy_bucket] %>:<%= configuration[:rails_env] %>/<%= File.basename(filename) %> <%= remote_filename %> 2>&1
+cd <%= configuration[:releases_path] %> && <%= decompress(remote_filename).join(" ") %> && rm <%= remote_filename %>
+
+# cap deploy:assets_symlink   (Rails 3.x specific)
+rm -rf <%= configuration[:release_path] %>/public/assets
+mkdir -p <%= configuration[:release_path] %>/public
+mkdir -p <%= configuration[:deploy_to] %>/shared/assets
+ln -s <%= configuration[:shared_path] %>/assets <%= configuration[:release_path] %>/public/assets
+
+# cap deploy:finalize_update
+chmod -R g+w <%= configuration[:release_path] %>
+rm -rf <%= configuration[:release_path] %>/log
+rm -rf <%= configuration[:release_path] %>/public/system
+rm -rf <%= configuration[:release_path] %>/tmp/pids
+mkdir -p <%= configuration[:release_path] %>/public
+mkdir -p <%= configuration[:release_path] %>/tmp
+ln -s <%= configuration[:shared_path] %>/system <%= configuration[:release_path] %>/public/system
+ln -s <%= configuration[:shared_path] %>/log <%= configuration[:release_path] %>/log
+ln -s <%= configuration[:shared_path] %>/pids <%= configuration[:release_path] %>/tmp/pids
+
+# AFTER: cap deploy:finalize_update
+cd <%= configuration[:release_path] %>
+bundle install --gemfile <%= configuration[:release_path] %>/Gemfile --path <%= configuration[:shared_path] %>/bundle --deployment --quiet --without development test
+
+# AFTER: cap deploy:update_code
+# cap deploy:assets:precompile
+cd <%= configuration[:release_path] %>
+bundle exec rake RAILS_ENV=<%= configuration[:rails_env] %> RAILS_GROUPS=assets assets:precompile
+
+# Project specific shared symlinking
+#ln -nfs <%= configuration[:shared_path] %>/content <%= configuration[:release_path] %>/public/content
+#ln -nfs <%= configuration[:shared_path] %>/uploads <%= configuration[:release_path] %>/public/uploads
+
+# cap deploy:create_symlink
+rm -f <%= configuration[:current_path] %>
+ln -s <%= configuration[:release_path] %> <%= configuration[:current_path] %>
+
+# cap deploy:restart
+# touch <%= configuration[:current_path] %>/tmp/restart.txt
+
+# AFTER: cap deploy:restart
+# cd <%= configuration[:current_path] %>;RAILS_ENV=<%= configuration[:rails_env] %> script/delayed_job restart

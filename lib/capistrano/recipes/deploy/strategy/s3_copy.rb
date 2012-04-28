@@ -1,17 +1,17 @@
 require 'capistrano/recipes/deploy/strategy/copy'
+require 'erb'
+
 
 module Capistrano
   module Deploy
     module Strategy
       class S3Copy < Copy
-      
-        S3CMD_VARS = ["aws_access_key_id", "aws_secret_access_key"]
-      
+
         def initialize(config={})
           super(config)
           
           s3cmd_vars = []
-          S3CMD_VARS.each do |var|
+          ["aws_access_key_id", "aws_secret_access_key"].each do |var|
             value = configuration[var.to_sym]
             raise Capistrano::Error, "Missing configuration[:#{var}] setting" if value.nil?
             s3cmd_vars << "#{var.upcase}=#{value}"
@@ -46,6 +46,23 @@ module Capistrano
           run "#{aws_environment} s3cmd get #{bucket_name}:#{rails_env}/#{package_name} #{remote_filename} 2>&1"
           run "cd #{configuration[:releases_path]} && #{decompress(remote_filename).join(" ")} && rm #{remote_filename}"          
           logger.debug "done!"
+
+          build_aws_install_script
+        end
+
+        def build_aws_install_script
+          template_text = configuration[:aws_install_script]
+          template_text = File.read(File.join(File.dirname(__FILE__), "aws_install.sh.erb")) if template_text.nil?
+          template_text = template_text.gsub("\r\n?", "\n")
+          template = ERB.new(template_text, nil, '<>-')
+          output = template.result(self.binding)
+          File.open(File.join(copy_dir, "aws_install.sh"), "w") do  |f|
+            f.write(output)
+          end
+        end
+
+        def binding
+          super
         end
           
         def aws_environment            
@@ -59,3 +76,4 @@ module Capistrano
     end
   end
 end
+
