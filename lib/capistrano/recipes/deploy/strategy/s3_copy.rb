@@ -33,7 +33,7 @@ module Capistrano
         def distribute!
           package_path = filename
           package_name = File.basename(package_path)
-          s3_push_cmd = "#{aws_environment} s3cmd put #{bucket_name}:#{rails_env}/#{package_name} #{package_path} x-amz-server-side-encryption:AES256"
+          s3_push_cmd = "#{aws_environment} s3cmd put #{bucket_name}:#{rails_env}/#{package_name} #{package_path} x-amz-server-side-encryption:AES256 2>&1"
 
           if configuration.dry_run
             logger.debug s3_push_cmd
@@ -59,7 +59,7 @@ module Capistrano
           File.open(local_output_file, "w") do  |f|
             f.write(output)
           end
-          configuration[:s3_copy_aws_install_cmd] = "#{aws_environment} s3cmd put #{bucket_name}:#{rails_env}/aws_install.sh #{local_output_file} x-amz-server-side-encryption:AES256"
+          configuration[:s3_copy_aws_install_cmd] = "#{aws_environment} s3cmd put #{bucket_name}:#{rails_env}/aws_install.sh #{local_output_file} x-amz-server-side-encryption:AES256 2>&1"
         end
 
         def binding
