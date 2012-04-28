@@ -98,7 +98,7 @@ thats executed is generated from an ERB template.
     # mkdir -p ${SHARED_PATH}/uploads
 
     # cap deploy:update_code
-    s3cmd get ${AWS_RELEASE_BUCKET}:${S3_PACKAGE_PATH} ${DOWNLOADED_PACKAGE_PATH} 2>&1
+    s3cmd get ${AWS_RELEASES_BUCKET}:${S3_PACKAGE_PATH} ${DOWNLOADED_PACKAGE_PATH} 2>&1
     cd ${RELEASES_PATH} && ${DECOMPRESS_CMD} && rm ${DOWNLOADED_PACKAGE_PATH}
 
     # cap deploy:assets_symlink   (Rails 3.x specific)
