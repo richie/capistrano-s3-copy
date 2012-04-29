@@ -2,8 +2,22 @@
 
 # Auto-scaling capistrano like deployment script Rails3 specific.
 
+set -x
+set -e
+
 echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"
 echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"
+
+if [ "${AWS_ACCESS_KEY_ID}" == "" ]; then
+  echo "Expecting the environment variable AWS_ACCESS_KEY_ID to be set"
+  exit 1
+fi
+
+if [ "${AWS_SECRET_ACCESS_KEY}" == "" ]; then
+  echo "Expecting the environment variable AWS_SECRET_ACCESS_KEY to be set"
+  exit 2
+fi
+
 AWS_RELEASES_BUCKET=<%= configuration[:aws_releases_bucket] %>
 
 RAILS_ENV=<%= configuration[:rails_env] %>              # e.g. production

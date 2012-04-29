@@ -61,14 +61,28 @@ someone running:
 Of course, everyone has tweaks that they make to the standard capistrano recipe. For this reason, the script
 thats executed is generated from an ERB template.
 
+
     #!/bin/sh
 
     # Auto-scaling capistrano like deployment script Rails3 specific.
 
+    set -x
+    set -e
+
     echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"
     echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"
-    AWS_RELEASES_BUCKET=<%= configuration[:aws_releases_bucket] %>
 
+    if [ "${AWS_ACCESS_KEY_ID}" == "" ]; then
+      echo "Expecting the environment variable AWS_ACCESS_KEY_ID to be set"
+      exit 1
+    fi
+    
+    if [ "${AWS_SECRET_ACCESS_KEY}" == "" ]; then
+      echo "Expecting the environment variable AWS_SECRET_ACCESS_KEY to be set"
+      exit 2
+    fi
+
+    AWS_RELEASES_BUCKET=<%= configuration[:aws_releases_bucket] %>
     RAILS_ENV=<%= configuration[:rails_env] %>              # e.g. production
     DEPLOY_TO=<%= configuration[:deploy_to] %>              # e.g. /u/apps/myapp
     RELEASES_PATH=<%= configuration[:releases_path] %>      # e.g. /u/apps/myapp/releases
