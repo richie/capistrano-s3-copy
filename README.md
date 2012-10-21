@@ -6,7 +6,7 @@ I have a requirement to push new deployments via capistrano, but also to retain 
 package in S3 for the purposes of auto-scaling.
 
 This gem use Capistrano's own code to package the tarball, but instead of deploying it to each
-machine, we deploy it to a configured S3 bucket (using s3cmd provided by the rahugo-s3sync gem https://github.com/frahugo/s3sync),
+machine, we deploy it to a configured S3 bucket (using s3cmd provided by the https://github.com/s3tools/s3cmd),
 then deploy it from there to the known nodes from the capistrano script.
 
 ## Installation
